@@ -1,6 +1,6 @@
 services:
   voicebro:
-    build: .
+    image: ghcr.io/bigsby-exe/voicebro-discord:${VOICEBRO_TAG:-latest}
     platform: linux/amd64
     init: true
     restart: unless-stopped

@@ -27,6 +27,9 @@ jobs:
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
             --tag "${image}:${GITHUB_SHA}" .
           docker run --rm --entrypoint codex "${image}:${GITHUB_SHA}" --version
+          docker run --rm --network none \
+            -v "$PWD/apps/server/testdata/hey-hank.wav:/test.wav:ro" \
+            "${image}:${GITHUB_SHA}" --check-wake /test.wav
 
       - name: Publish commit and latest tags
         env:

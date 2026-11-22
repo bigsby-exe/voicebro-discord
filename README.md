@@ -51,7 +51,7 @@
 ## Ubuntu Docker server
 
 The headless image runs **Codex realtime voice** on an x86-64 Ubuntu server with Docker
-Engine and Docker Compose v2. Build it on the server with internet access. The image
+Engine and Docker Compose v2. Compose pulls the published image from GHCR. The image
 includes Codex CLI and the English Vosk model. Settings and the Codex sign-in persist
 in named volumes. The Windows desktop app also offers Whisper, other engines and owner
 linking. On Linux, optional speaker opt-ins last for the running process.
@@ -65,11 +65,15 @@ linking. On Linux, optional speaker opt-ins last for the running process.
    nano .env
    ```
 
-3. Build and sign in once. Follow the device-login link on your own computer. If prompted,
+   If GHCR denies the pull, check that the first publish succeeded. For a private
+   package, run `docker login ghcr.io -u YOUR_GITHUB_USERNAME` and enter a classic
+   personal access token with `read:packages` at the password prompt.
+
+3. Pull the image and sign in once. Follow the device-login link on your own computer. If prompted,
    enable device code authorization in your ChatGPT account security settings.
 
    ```bash
-   docker compose build
+   docker compose pull
    docker compose run --rm --entrypoint codex voicebro login --device-auth
    docker compose up -d
    docker compose logs -f voicebro
@@ -78,6 +82,22 @@ linking. On Linux, optional speaker opt-ins last for the running process.
 4. Join a Discord voice channel, type `/join`, say **hey hank**, then ask your question.
    Say **peace out** to close the session. Use `docker compose down` to stop the service
    and `docker compose up -d` to start it again.
+
+To update, run `docker compose pull && docker compose up -d`. Your settings and
+Codex sign-in stay in their named volumes. To pin or roll back, set `VOICEBRO_TAG`
+in `.env` to the full Git commit SHA of a published image and run the same commands.
+
+For an offline wake check, run the following from this checkout with a published image
+that includes the check. It uses the server's configured wake model and activation phrases.
+The included clip says “hey hank”. Substitute a recording of your own voice (16 kHz,
+mono, 16-bit PCM WAV) to check how the recognizer handles your pronunciation.
+
+```bash
+docker compose run --rm -v "$PWD/apps/server/testdata/hey-hank.wav:/test.wav:ro" voicebro --check-wake /test.wav
+```
+
+Vosk detects the wake and end phrases locally. Once a session opens, Codex realtime
+receives your question as audio. Changing the wake model affects phrase detection.
 
 ## Requirements
 

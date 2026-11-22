@@ -7,5 +7,6 @@ publish = false
 
 [dependencies]
 anyhow.workspace = true
+hound = "3.5"
 voicebro-core.workspace = true
 tokio = { workspace = true, features = ["signal"] }
