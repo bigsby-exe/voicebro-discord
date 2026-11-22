@@ -24,6 +24,12 @@ or API key, or OpenCode with the providers the user set up in it. Only Codex has
 realtime voice mode; Claude Code and OpenCode answer in the Whisper mode. The app never
 reads or stores an engine's credentials.
 
+The Linux server shell in `apps/server` runs the same core and Codex realtime assistant
+under Docker Compose. It reads the Discord token from a mounted secret, initializes
+the English wake phrase on first boot, and sends runtime events to container logs.
+The image carries the Linux Vosk runtime and model. Docker volumes hold settings and
+the Codex sign-in.
+
 Two assistant modes (`assistant.mode`, change `whisper-mode`):
 
 - **Realtime voice** (the default): Vosk spots the phrases on the PC, and during a session the

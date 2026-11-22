@@ -1546,13 +1546,7 @@ mod tests {
         assert_eq!(labels(german), ["Vosk library", "Vosk German model"]);
         assert_eq!(
             manager.requirements(german).unwrap()[0],
-            DownloadItem {
-                label: "Vosk library".to_owned(),
-                host: "github.com".to_owned(),
-                bytes: vosk::LIBRARY.size,
-                file: "vosk-win64-0.3.45.zip".to_owned(),
-                page: "https://github.com/alphacep/vosk-api/releases/tag/v0.3.45".to_owned(),
-            }
+            DownloadItem::of(&vosk::LIBRARY)
         );
         let english = manager
             .requirements(catalog::default_entry().id)
@@ -1564,8 +1558,8 @@ mod tests {
             english,
             [
                 (
-                    "vosk-win64-0.3.45.zip".to_owned(),
-                    "https://github.com/alphacep/vosk-api/releases/tag/v0.3.45".to_owned()
+                    vosk::LIBRARY.file_name().to_owned(),
+                    vosk::LIBRARY.page.to_owned()
                 ),
                 (
                     "vosk-model-small-en-us-0.15.zip".to_owned(),
@@ -1794,13 +1788,13 @@ mod tests {
     #[test]
     fn the_download_item_names_the_site() {
         let item = DownloadItem::of(&vosk::LIBRARY);
+        #[cfg(target_os = "linux")]
+        assert_eq!(item.host, "files.pythonhosted.org");
+        #[cfg(not(target_os = "linux"))]
         assert_eq!(item.host, "github.com");
         assert_eq!(item.label, "Vosk library");
-        assert_eq!(item.file, "vosk-win64-0.3.45.zip");
-        assert_eq!(
-            item.page,
-            "https://github.com/alphacep/vosk-api/releases/tag/v0.3.45"
-        );
+        assert_eq!(item.file, vosk::LIBRARY.file_name());
+        assert_eq!(item.page, vosk::LIBRARY.page);
         let english = catalog::default_entry();
         assert_eq!(DownloadItem::of(&english.asset).host, "alphacephei.com");
         assert_eq!(
@@ -1810,7 +1804,10 @@ mod tests {
         assert_eq!(DownloadItem::of(&english.asset).page, catalog::MODELS_PAGE);
         assert_eq!(DownloadItem::of(&english.asset).bytes, 41_205_931);
         assert_eq!(megabytes(english.asset.size), 41);
-        assert_eq!(megabytes(vosk::LIBRARY.size), 15);
+        assert_eq!(
+            megabytes(vosk::LIBRARY.size),
+            if cfg!(target_os = "linux") { 7 } else { 15 }
+        );
         assert_eq!(
             megabytes(catalog::find(catalog::RUSSIAN_SMALL).unwrap().asset.size),
             46

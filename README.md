@@ -48,6 +48,37 @@
   one-time code, and only your voice reaches the assistant. Everyone can still bring the bot
   in and hear the answers.
 
+## Ubuntu Docker server
+
+The headless image runs **Codex realtime voice** on an x86-64 Ubuntu server with Docker
+Engine and Docker Compose v2. Build it on the server with internet access. The image
+includes Codex CLI and the English Vosk model. Settings and the Codex sign-in persist
+in named volumes. The Windows desktop app also offers Whisper, other engines and owner
+linking. On Linux, optional speaker opt-ins last for the running process.
+
+1. Invite your Discord bot using the scopes and permissions in [Quick start](#quick-start).
+2. From this checkout, create the local configuration and put your Discord bot token in
+   the blank `DISCORD_TOKEN=` field.
+
+   ```bash
+   install -m 600 .env.example .env
+   nano .env
+   ```
+
+3. Build and sign in once. Follow the device-login link on your own computer. If prompted,
+   enable device code authorization in your ChatGPT account security settings.
+
+   ```bash
+   docker compose build
+   docker compose run --rm --entrypoint codex voicebro login --device-auth
+   docker compose up -d
+   docker compose logs -f voicebro
+   ```
+
+4. Join a Discord voice channel, type `/join`, say **hey hank**, then ask your question.
+   Say **peace out** to close the session. Use `docker compose down` to stop the service
+   and `docker compose up -d` to start it again.
+
 ## Requirements
 
 - Windows 10 or 11, 64-bit

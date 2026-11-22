@@ -2,7 +2,9 @@
 //! `whisper-mode`, design D9b): `Windows.Media.SpeechSynthesis.SpeechSynthesizer` writes a
 //! 16 kHz mono 16-bit WAV, read by walking its RIFF chunks.
 
-use super::{Synth, TtsError};
+#[cfg(windows)]
+use super::Synth;
+use super::TtsError;
 
 /// A voice Windows lists.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]

@@ -73,9 +73,16 @@ impl Asset {
     }
 }
 
+#[cfg(windows)]
 fn system_tool(name: &str) -> PathBuf {
     let root = std::env::var_os("SystemRoot").unwrap_or_else(|| "C:\\Windows".into());
-    PathBuf::from(root).join("System32").join(name)
+    PathBuf::from(root).join("System32").join(format!("{name}.exe"))
+}
+
+#[cfg(not(windows))]
+fn system_tool(name: &str) -> PathBuf {
+    // bsdtar reads zip (including wheels) as well as the tar model archives.
+    PathBuf::from(if name == "tar" { "bsdtar" } else { name })
 }
 
 fn hide_window(command: &mut Command) {
@@ -162,7 +169,7 @@ fn download(
     progress: &dyn Fn(u8),
 ) -> Result<(), String> {
     let _ = std::fs::remove_file(target);
-    let mut command = Command::new(system_tool("curl.exe"));
+    let mut command = Command::new(system_tool("curl"));
     command
         .args(["-L", "--fail", "--silent", "--show-error", "-o"])
         .arg(target)
@@ -214,12 +221,12 @@ fn download(
 }
 
 fn extract(archive: &Path, destination: &Path) -> Result<(), String> {
-    let mut command = Command::new(system_tool("tar.exe"));
+    let mut command = Command::new(system_tool("tar"));
     command.arg("-xf").arg(archive).arg("-C").arg(destination);
     hide_window(&mut command);
     let output = command
         .output()
-        .map_err(|error| format!("running tar.exe: {error}"))?;
+        .map_err(|error| format!("running archive tool: {error}"))?;
     if !output.status.success() {
         return Err(format!(
             "extracting {}: {}",
@@ -408,7 +415,7 @@ pub(crate) fn test_archive(
         std::fs::write(&path, file.as_bytes()).expect("source file");
     }
     let archive = dir.join(name);
-    let mut command = Command::new(system_tool("tar.exe"));
+    let mut command = Command::new(system_tool("tar"));
     if name.ends_with(".tar.bz2") {
         command.arg("-cjf");
     } else {
@@ -420,7 +427,7 @@ pub(crate) fn test_archive(
         .arg(&source)
         .arg(folder)
         .status()
-        .expect("running tar.exe");
+        .expect("running archive tool");
     assert!(status.success(), "tar.exe made {name}");
     let digest = sha256_file(&archive).expect("hashing the test archive");
     (archive, digest)
