@@ -7351,6 +7351,7 @@ name = "voicebro-server"
 version = "1.3.0"
 dependencies = [
  "anyhow",
+ "hound",
  "tokio",
  "voicebro-core",
 ]

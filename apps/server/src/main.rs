@@ -1,4 +1,6 @@
 //! Headless shell for the Codex realtime voice engine.
+mod check_wake;
+
 use anyhow::{ensure, Context, Result};
 use std::{fs, sync::Arc};
 use voicebro_core::{
@@ -12,15 +14,15 @@ use voicebro_core::{
 };
 
 fn main() -> Result<()> {
-    let token_path = std::env::var_os("DISCORD_TOKEN_FILE")
-        .unwrap_or_else(|| "/run/secrets/discord_token".into());
-    let token = fs::read_to_string(&token_path)
-        .with_context(|| format!("read Discord bot token from {token_path:?}"))?;
-    ensure!(!token.trim().is_empty(), "Discord bot token is empty");
-    let secrets = Arc::new(MemoryStore::default());
-    secrets.set(SecretKey::DiscordToken, token.trim())?;
-    drop(token);
-
+    let mut args = std::env::args_os().skip(1);
+    let check = match args.next() {
+        None => None,
+        Some(flag) if flag == "--check-wake" => {
+            Some(args.next().context("expected a 16 kHz mono WAV path")?)
+        }
+        _ => anyhow::bail!("usage: voicebro-server [--check-wake WAV]"),
+    };
+    ensure!(args.next().is_none(), "unexpected extra argument");
     let data = paths::data_dir();
     fs::create_dir_all(&data)?;
     let store = SettingsStore::new(paths::settings_path(&data));
@@ -49,6 +51,19 @@ fn main() -> Result<()> {
         settings.discord.access != AccessMode::Owner,
         "owner linking requires the desktop interface"
     );
+
+    if let Some(wav) = check {
+        return check_wake::run(&data, &settings, std::path::Path::new(&wav));
+    }
+
+    let token_path = std::env::var_os("DISCORD_TOKEN_FILE")
+        .unwrap_or_else(|| "/run/secrets/discord_token".into());
+    let token = fs::read_to_string(&token_path)
+        .with_context(|| format!("read Discord bot token from {token_path:?}"))?;
+    ensure!(!token.trim().is_empty(), "Discord bot token is empty");
+    let secrets = Arc::new(MemoryStore::default());
+    secrets.set(SecretKey::DiscordToken, token.trim())?;
+    drop(token);
 
     let executor = tokio::runtime::Runtime::new()?;
     let handle = executor.handle().clone();
