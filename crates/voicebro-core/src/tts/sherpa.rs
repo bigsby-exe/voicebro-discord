@@ -182,24 +182,9 @@ pub enum Model {
 
 /// Loads `path` by full path, so its own imports resolve from its folder.
 pub(crate) fn load_library(path: &Path) -> Result<Library, TtsError> {
-    #[cfg(windows)]
-    {
-        // SAFETY: loading a library pinned by hash; its initializers are the vendor's.
-        unsafe {
-            libloading::os::windows::Library::load_with_flags(
-                path,
-                libloading::os::windows::LOAD_WITH_ALTERED_SEARCH_PATH,
-            )
-        }
-        .map(Library::from)
+    // SAFETY: loading a library pinned by hash; its initializers are the vendor's.
+    unsafe { crate::native_library::load(path) }
         .map_err(|error| TtsError::Load(format!("{}: {error}", path.display())))
-    }
-    #[cfg(not(windows))]
-    {
-        // SAFETY: as above.
-        unsafe { Library::new(path) }
-            .map_err(|error| TtsError::Load(format!("{}: {error}", path.display())))
-    }
 }
 
 fn c_path(path: &Path) -> Result<CString, TtsError> {

@@ -26,6 +26,7 @@ pub mod consent;
 pub mod discord;
 pub mod events;
 pub mod gate;
+mod native_library;
 pub mod latency;
 pub mod owner;
 pub mod paths;

@@ -5,7 +5,7 @@
 //! never leave this module; every handle frees itself on drop.
 
 use super::super::SttError;
-use libloading::os::windows::{Library, LOAD_WITH_ALTERED_SEARCH_PATH};
+use libloading::Library;
 use std::ffi::{c_char, c_float, c_int, c_void, CStr, CString};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -229,7 +229,7 @@ unsafe impl Sync for WhisperRuntime {}
 fn load_library(path: &Path) -> Result<Library, SttError> {
     // SAFETY: loading a library of the pinned, hash-verified runtime by its full path. The
     // altered search path resolves its own imports from the same folder.
-    unsafe { Library::load_with_flags(path, LOAD_WITH_ALTERED_SEARCH_PATH) }
+    unsafe { crate::native_library::load(path) }
         .map_err(|error| SttError::Load(format!("could not load {}: {error}", path.display())))
 }
 

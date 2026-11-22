@@ -1,0 +1,20 @@
+services:
+  voicebro:
+    build: .
+    platform: linux/amd64
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 20s
+    secrets:
+      - discord_token
+    volumes:
+      - data:/data
+      - codex:/home/voicebro/.codex
+
+volumes:
+  data:
+  codex:
+
+secrets:
+  discord_token:
+    environment: DISCORD_TOKEN
